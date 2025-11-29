@@ -1,16 +1,21 @@
 import { create } from 'zustand';
 import type { CellValue, Grid, Tetromino, TetrominoType, GameState as IGameState } from '../types/game';
 import { isValidPosition, getRotatedShape } from '../utils/collision';
+import { getTetrominoShape } from '../utils/pieces';
 
 /**
  * Game store state interface
  */
 interface GameStore extends IGameState {
+  // Additional state
+  score: number;
+  nextPiece: Tetromino | null;
   // Actions
   moveLeft: () => void;
   moveRight: () => void;
   rotate: () => void;
   drop: () => void;
+  resetGame: () => void;
 }
 
 /**
@@ -81,6 +86,19 @@ function placeTetrominoOnGrid(grid: Grid, tetromino: Tetromino): Grid {
 }
 
 /**
+ * Calculate score based on lines cleared
+ * 1 line = 100, 2 lines = 300, 3 lines = 500, 4 lines = 800
+ */
+function calculateScore(linesCleared: number): number {
+  if (linesCleared === 0) return 0;
+  if (linesCleared === 1) return 100;
+  if (linesCleared === 2) return 300;
+  if (linesCleared === 3) return 500;
+  if (linesCleared === 4) return 800;
+  return 800 + (linesCleared - 4) * 200; // Bonus for more than 4 lines
+}
+
+/**
  * Clear completed lines and return the new grid and number of lines cleared
  */
 function clearLines(grid: Grid): { newGrid: Grid; linesCleared: number } {
@@ -115,19 +133,36 @@ function checkGameOver(grid: Grid, tetromino: Tetromino): boolean {
 }
 
 /**
+ * Initialize game state
+ */
+function initializeGame() {
+  const grid = createEmptyGrid();
+  const currentPiece = spawnTetromino();
+  const nextPiece = spawnTetromino();
+  return {
+    grid,
+    currentPiece,
+    nextPiece,
+    score: 0,
+    isGameOver: false,
+    isPaused: false,
+  };
+}
+
+/**
  * Game store using Zustand
  */
 export const useGameStore = create<GameStore>((set, get) => {
-  // Initialize with a spawned piece
-  const initialGrid = createEmptyGrid();
-  const initialPiece = spawnTetromino();
+  const initialState = initializeGame();
 
   return {
     // Initial state
-    grid: initialGrid,
-    currentPiece: initialPiece,
-    isGameOver: false,
-    isPaused: false,
+    grid: initialState.grid,
+    currentPiece: initialState.currentPiece,
+    nextPiece: initialState.nextPiece,
+    score: initialState.score,
+    isGameOver: initialState.isGameOver,
+    isPaused: initialState.isPaused,
 
     // Actions
     moveLeft: () => {
@@ -204,20 +239,42 @@ export const useGameStore = create<GameStore>((set, get) => {
           },
         });
       } else {
-        // Lock the piece and spawn a new one
+        // Lock the piece
         const newGrid = placeTetrominoOnGrid(state.grid, state.currentPiece);
         const { newGrid: clearedGrid, linesCleared } = clearLines(newGrid);
-        const newPiece = spawnTetromino();
+
+        // Calculate score
+        const scoreIncrease = calculateScore(linesCleared);
+        const newScore = state.score + scoreIncrease;
+
+        // Use nextPiece as currentPiece, spawn new nextPiece
+        const newCurrentPiece = state.nextPiece ? {
+          ...state.nextPiece,
+          position: {
+            x: Math.floor((GRID_COLS - (getTetrominoShape(state.nextPiece.type)[0]?.length || 0)) / 2),
+            y: 0,
+          },
+          rotation: 0,
+        } : null;
+
+        const newNextPiece = spawnTetromino();
 
         // Check if game is over
-        const gameOver = checkGameOver(clearedGrid, newPiece);
+        const gameOver = newCurrentPiece ? checkGameOver(clearedGrid, newCurrentPiece) : true;
 
         set({
           grid: clearedGrid,
-          currentPiece: gameOver ? null : newPiece,
+          currentPiece: gameOver ? null : newCurrentPiece,
+          nextPiece: gameOver ? null : newNextPiece,
+          score: newScore,
           isGameOver: gameOver,
         });
       }
+    },
+
+    resetGame: () => {
+      const newState = initializeGame();
+      set(newState);
     },
   };
 });
