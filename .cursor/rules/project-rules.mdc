@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+---
+# Project Context
+We are building a web-based Tetris-style falling block puzzle game.
+The goal is to start with a solid logic foundation and progressively make the UI/UX richer.
+
+# Tech Stack
+- Runtime: React (Vite)
+- Language: TypeScript (Strict mode)
+- State Management: Zustand
+- Styling: Tailwind CSS
+- Animation: Framer Motion
+- Icons: Lucide React
+
+# Directory Structure (Strict Enforcement)
+Follow this structure for all new files. Do not create separate CSS files; use Tailwind.
+
+/src
+  /components     # UI Components (View only)
+    - Board.tsx
+    - Cell.tsx
+    - Controls.tsx
+    - ScoreBoard.tsx
+    - NextPiece.tsx
+  /hooks          # React Hooks
+    - useGameLoop.ts  # Handles requestAnimationFrame
+  /store          # State Management (Logic center)
+    - gameStore.ts    # Zustand store containing ALL game state & actions
+  /types          # Type Definitions
+    - game.ts         # Shared types (Grid, Tetromino, GameState)
+  /utils          # Pure functions & Constants
+    - pieces.ts       # Tetromino shapes & color definitions
+    - collision.ts    # Collision detection logic
+
+# Coding Guidelines
+
+## TypeScript
+- Always use strict typing. Avoid `any`.
+- Define shared types in `src/types/game.ts` first, then import them.
+- Use explicit return types for complex functions.
+
+## State Management (Zustand)
+- **Separation of Concerns:** The React components should ONLY handle rendering and user input.
+- ALL game logic (movement, rotation, line clearing, score calculation) must reside in `src/store/gameStore.ts`.
+- Components should subscribe to the store state to react to changes.
+
+## Styling (Tailwind CSS)
+- Use mobile-first responsive design classes.
+- Use distinct colors for different Tetromino types defined in `src/utils/pieces.ts`.
+- Ensure high contrast for readability.
+
+## Game Logic Rules
+- **Grid:** 0-indexed, typically 20 rows x 10 columns.
+- **Coordinates:** {x: 0, y: 0} is Top-Left. x increases right, y increases down.
+- **Piece Definitions:** Strictly use `src/utils/pieces.ts` for shape data.
+
+## Animation
+- Use `Framer Motion` for UI transitions (e.g., line clears, game over modal).
+- Keep animations performant (avoid layout trashing).
+
+# Development Workflow (Vibe Coding)
+1. When asked to implement a feature, check `src/types/game.ts` first.
+2. Implement the logic in `src/store/gameStore.ts`.
+3. Create/Update the UI component in `src/components/`.
+4. Ensure the game loop is decoupled from the rendering loop.
