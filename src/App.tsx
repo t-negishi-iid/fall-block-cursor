@@ -58,9 +58,9 @@ function App() {
       {/* Title */}
       <div className="pt-8 pb-4 text-center">
         <h1 className="text-5xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2 drop-shadow-lg">
-          TETRIS
+          Vibe Blocks
         </h1>
-        <p className="text-gray-400 text-sm">Vibe Coding Edition</p>
+        <p className="text-gray-400 text-sm">Falling Block Puzzle Game</p>
       </div>
 
       {/* Main Content - 2 Column Layout */}

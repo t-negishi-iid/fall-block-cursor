@@ -2,7 +2,7 @@
 alwaysApply: true
 ---
 # Project Context
-We are building a web-based Tetris-style falling block puzzle game.
+We are building a web-based falling block puzzle game.
 The goal is to start with a solid logic foundation and progressively make the UI/UX richer.
 
 # Tech Stack
