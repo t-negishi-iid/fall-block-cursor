@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Grid, Tetromino, GameState as IGameState } from '../types/game';
+import type { CellValue, Grid, Tetromino, GameState as IGameState } from '../types/game';
 
 /**
  * Game store state interface
@@ -22,9 +22,15 @@ const GRID_COLS = 10;
  * Create an empty grid (20 rows x 10 columns)
  */
 function createEmptyGrid(): Grid {
-  return Array(GRID_ROWS)
-    .fill(null)
-    .map(() => Array(GRID_COLS).fill(0) as Grid[0]);
+  const grid: Grid = [];
+  for (let y = 0; y < GRID_ROWS; y++) {
+    const row: CellValue[] = [];
+    for (let x = 0; x < GRID_COLS; x++) {
+      row.push(0);
+    }
+    grid.push(row);
+  }
+  return grid;
 }
 
 /**
