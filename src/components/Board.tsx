@@ -9,6 +9,7 @@ import type { CellValue } from '../types/game';
 export function Board() {
   const grid = useGameStore((state) => state.grid);
   const currentPiece = useGameStore((state) => state.currentPiece);
+  const isHardMode = useGameStore((state) => state.isHardMode);
 
   // Create a display grid that includes the current piece
   const displayGrid: CellValue[][] = grid.map((row) => [...row]);
@@ -38,7 +39,7 @@ export function Board() {
 
   return (
     <div
-      className="grid grid-cols-10 gap-0 border-2 border-gray-600 bg-gray-900"
+      className={`grid grid-cols-10 gap-0 ${isHardMode ? 'bg-black' : 'border-2 border-gray-600 bg-gray-900'}`}
       style={{ width: '240px' }}
     >
       {displayGrid.map((row, rowIndex) =>
@@ -48,7 +49,7 @@ export function Board() {
             className="w-6 h-6"
             style={{ width: '24px', height: '24px' }}
           >
-            <Cell type={cellValue} />
+            <Cell type={cellValue} isHardMode={isHardMode} />
           </div>
         ))
       )}
