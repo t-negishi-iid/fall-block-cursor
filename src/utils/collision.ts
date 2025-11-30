@@ -1,4 +1,4 @@
-import type { Grid, Position, Tetromino, TetrominoShape } from '../types/game';
+import type { Grid, Tetromino, TetrominoShape } from '../types/game';
 import { getTetrominoShape } from './pieces';
 
 /**
