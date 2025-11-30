@@ -8,4 +8,6 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
+  // GitHub Pages用のベースパス設定
+  base: '/fall-block-cursor/',
 })
