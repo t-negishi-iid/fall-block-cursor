@@ -11,6 +11,7 @@ interface GameStore extends IGameState {
   score: number;
   nextPiece: Tetromino | null;
   isPlaying: boolean;
+  isHardMode: boolean;
   // Actions
   moveLeft: () => void;
   moveRight: () => void;
@@ -19,6 +20,7 @@ interface GameStore extends IGameState {
   hardDrop: () => void;
   startGame: () => void;
   resetGame: () => void;
+  toggleHardMode: () => void;
 }
 
 /**
@@ -150,6 +152,7 @@ function initializeGame() {
     isGameOver: false,
     isPaused: false,
     isPlaying: false,
+    isHardMode: false,
   };
 }
 
@@ -168,6 +171,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     isGameOver: initialState.isGameOver,
     isPaused: initialState.isPaused,
     isPlaying: initialState.isPlaying,
+    isHardMode: initialState.isHardMode,
 
     // Actions
     moveLeft: () => {
@@ -368,6 +372,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     resetGame: () => {
       const newState = initializeGame();
       set(newState);
+    },
+
+    toggleHardMode: () => {
+      set((state) => ({ isHardMode: !state.isHardMode }));
     },
   };
 });
