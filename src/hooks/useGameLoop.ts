@@ -10,6 +10,7 @@ export function useGameLoop(): void {
   const drop = useGameStore((state) => state.drop);
   const isGameOver = useGameStore((state) => state.isGameOver);
   const isPaused = useGameStore((state) => state.isPaused);
+  const isPlaying = useGameStore((state) => state.isPlaying);
   const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -19,17 +20,15 @@ export function useGameLoop(): void {
       intervalRef.current = null;
     }
 
-    // Don't start loop if game is over or paused
-    if (isGameOver || isPaused) {
+    // Don't start loop if game is not playing, over, or paused
+    if (!isPlaying || isGameOver || isPaused) {
       return;
     }
 
     // Start the game loop
     intervalRef.current = window.setInterval(() => {
-      const currentIsGameOver = useGameStore.getState().isGameOver;
-      const currentIsPaused = useGameStore.getState().isPaused;
-
-      if (!currentIsGameOver && !currentIsPaused) {
+      const currentState = useGameStore.getState();
+      if (currentState.isPlaying && !currentState.isGameOver && !currentState.isPaused) {
         drop();
       }
     }, 1000);
@@ -41,5 +40,5 @@ export function useGameLoop(): void {
         intervalRef.current = null;
       }
     };
-  }, [drop, isGameOver, isPaused]);
+  }, [drop, isPlaying, isGameOver, isPaused]);
 }

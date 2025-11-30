@@ -3,6 +3,7 @@ import { Board } from './components/Board';
 import { ScoreBoard } from './components/ScoreBoard';
 import { NextPiece } from './components/NextPiece';
 import { GameOverModal } from './components/GameOverModal';
+import { StartScreen } from './components/StartScreen';
 import { useGameStore } from './store/gameStore';
 import { useGameLoop } from './hooks/useGameLoop';
 
@@ -14,7 +15,9 @@ function App() {
   const moveRight = useGameStore((state) => state.moveRight);
   const rotate = useGameStore((state) => state.rotate);
   const drop = useGameStore((state) => state.drop);
+  const hardDrop = useGameStore((state) => state.hardDrop);
   const isGameOver = useGameStore((state) => state.isGameOver);
+  const isPlaying = useGameStore((state) => state.isPlaying);
 
   // Start the game loop
   useGameLoop();
@@ -22,7 +25,7 @@ function App() {
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isGameOver) return;
+      if (isGameOver || !isPlaying) return;
 
       switch (event.key) {
         case 'ArrowLeft':
@@ -41,6 +44,10 @@ function App() {
           event.preventDefault();
           drop();
           break;
+        case ' ':
+          event.preventDefault();
+          hardDrop();
+          break;
         default:
           break;
       }
@@ -51,7 +58,7 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [moveLeft, moveRight, rotate, drop, isGameOver]);
+  }, [moveLeft, moveRight, rotate, drop, hardDrop, isGameOver, isPlaying]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
@@ -96,11 +103,18 @@ function App() {
                   <kbd className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs">↓</kbd>
                   <span>Drop</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <kbd className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-xs">Space</kbd>
+                  <span>Hard Drop</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Start Screen */}
+      <StartScreen />
 
       {/* Game Over Modal */}
       <GameOverModal />

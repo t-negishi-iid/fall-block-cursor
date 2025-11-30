@@ -10,11 +10,14 @@ interface GameStore extends IGameState {
   // Additional state
   score: number;
   nextPiece: Tetromino | null;
+  isPlaying: boolean;
   // Actions
   moveLeft: () => void;
   moveRight: () => void;
   rotate: () => void;
   drop: () => void;
+  hardDrop: () => void;
+  startGame: () => void;
   resetGame: () => void;
 }
 
@@ -146,6 +149,7 @@ function initializeGame() {
     score: 0,
     isGameOver: false,
     isPaused: false,
+    isPlaying: false,
   };
 }
 
@@ -163,11 +167,12 @@ export const useGameStore = create<GameStore>((set, get) => {
     score: initialState.score,
     isGameOver: initialState.isGameOver,
     isPaused: initialState.isPaused,
+    isPlaying: initialState.isPlaying,
 
     // Actions
     moveLeft: () => {
       const state = get();
-      if (!state.currentPiece || state.isGameOver || state.isPaused) {
+      if (!state.currentPiece || state.isGameOver || state.isPaused || !state.isPlaying) {
         return;
       }
 
@@ -186,7 +191,7 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     moveRight: () => {
       const state = get();
-      if (!state.currentPiece || state.isGameOver || state.isPaused) {
+      if (!state.currentPiece || state.isGameOver || state.isPaused || !state.isPlaying) {
         return;
       }
 
@@ -205,7 +210,7 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     rotate: () => {
       const state = get();
-      if (!state.currentPiece || state.isGameOver || state.isPaused) {
+      if (!state.currentPiece || state.isGameOver || state.isPaused || !state.isPlaying) {
         return;
       }
 
@@ -222,7 +227,7 @@ export const useGameStore = create<GameStore>((set, get) => {
 
     drop: () => {
       const state = get();
-      if (!state.currentPiece || state.isGameOver || state.isPaused) {
+      if (!state.currentPiece || state.isGameOver || state.isPaused || !state.isPlaying) {
         return;
       }
 
@@ -270,6 +275,94 @@ export const useGameStore = create<GameStore>((set, get) => {
           isGameOver: gameOver,
         });
       }
+    },
+
+    hardDrop: () => {
+      const state = get();
+      if (!state.currentPiece || state.isGameOver || state.isPaused || !state.isPlaying) {
+        return;
+      }
+
+      // Find the lowest valid position
+      let dropDistance = 0;
+      while (isValidPosition(state.grid, state.currentPiece, 0, dropDistance + 1)) {
+        dropDistance++;
+      }
+
+      if (dropDistance === 0) {
+        // Already at the bottom, just lock it
+        const newGrid = placeTetrominoOnGrid(state.grid, state.currentPiece);
+        const { newGrid: clearedGrid, linesCleared } = clearLines(newGrid);
+
+        const scoreIncrease = calculateScore(linesCleared);
+        const newScore = state.score + scoreIncrease;
+
+        const newCurrentPiece = state.nextPiece ? {
+          ...state.nextPiece,
+          position: {
+            x: Math.floor((GRID_COLS - (getTetrominoShape(state.nextPiece.type)[0]?.length || 0)) / 2),
+            y: 0,
+          },
+          rotation: 0,
+        } : null;
+
+        const newNextPiece = spawnTetromino();
+        const gameOver = newCurrentPiece ? checkGameOver(clearedGrid, newCurrentPiece) : true;
+
+        set({
+          grid: clearedGrid,
+          currentPiece: gameOver ? null : newCurrentPiece,
+          nextPiece: gameOver ? null : newNextPiece,
+          score: newScore,
+          isGameOver: gameOver,
+        });
+      } else {
+        // Move to the bottom and lock
+        const droppedPiece: Tetromino = {
+          ...state.currentPiece,
+          position: {
+            x: state.currentPiece.position.x,
+            y: state.currentPiece.position.y + dropDistance,
+          },
+        };
+
+        const newGrid = placeTetrominoOnGrid(state.grid, droppedPiece);
+        const { newGrid: clearedGrid, linesCleared } = clearLines(newGrid);
+
+        // Calculate score: line clear + hard drop bonus (2 points per cell dropped)
+        const lineClearScore = calculateScore(linesCleared);
+        const hardDropBonus = dropDistance * 2;
+        const scoreIncrease = lineClearScore + hardDropBonus;
+        const newScore = state.score + scoreIncrease;
+
+        const newCurrentPiece = state.nextPiece ? {
+          ...state.nextPiece,
+          position: {
+            x: Math.floor((GRID_COLS - (getTetrominoShape(state.nextPiece.type)[0]?.length || 0)) / 2),
+            y: 0,
+          },
+          rotation: 0,
+        } : null;
+
+        const newNextPiece = spawnTetromino();
+        const gameOver = newCurrentPiece ? checkGameOver(clearedGrid, newCurrentPiece) : true;
+
+        set({
+          grid: clearedGrid,
+          currentPiece: gameOver ? null : newCurrentPiece,
+          nextPiece: gameOver ? null : newNextPiece,
+          score: newScore,
+          isGameOver: gameOver,
+        });
+      }
+    },
+
+    startGame: () => {
+      const newState = initializeGame();
+      set({
+        ...newState,
+        isPlaying: true,
+      });
     },
 
     resetGame: () => {
