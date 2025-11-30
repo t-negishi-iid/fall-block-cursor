@@ -11,6 +11,8 @@ interface GameStore extends IGameState {
   score: number;
   nextPiece: Tetromino | null;
   isPlaying: boolean;
+  level: number;
+  linesCleared: number;
   isHardMode: boolean;
   // Actions
   moveLeft: () => void;
@@ -20,6 +22,7 @@ interface GameStore extends IGameState {
   hardDrop: () => void;
   startGame: () => void;
   resetGame: () => void;
+  getDropSpeed: () => number;
   toggleHardMode: () => void;
 }
 
@@ -28,6 +31,38 @@ interface GameStore extends IGameState {
  */
 const GRID_ROWS = 20;
 const GRID_COLS = 10;
+
+/**
+ * Level configuration
+ */
+const LINES_PER_LEVEL = 10; // Level up every 10 lines cleared
+const BASE_DROP_SPEED = 1000; // Base speed in milliseconds (level 1)
+const MIN_DROP_SPEED = 30; // Minimum speed in milliseconds
+
+/**
+ * Calculate drop speed based on level
+ * Speed decreases (gets faster) as level increases with exponential acceleration
+ * Uses exponential decay: BASE_DROP_SPEED * 0.85^(level - 1)
+ * This makes speed increase accelerate dramatically as level increases
+ *
+ * Examples:
+ * - Level 1: 1000ms
+ * - Level 2: 850ms (-150ms)
+ * - Level 3: 723ms (-127ms from level 2)
+ * - Level 4: 614ms (-109ms from level 3)
+ * - Level 5: 522ms (-92ms from level 4)
+ * - Level 6: 444ms (-78ms from level 5)
+ * - Level 7: 377ms (-67ms from level 6)
+ * - Level 8: 320ms (-57ms from level 7)
+ * - Level 9: 272ms (-48ms from level 8)
+ * - Level 10: 231ms (-41ms from level 9)
+ */
+function calculateDropSpeed(level: number): number {
+  // Exponential decay: BASE_DROP_SPEED * 0.85^(level - 1)
+  // Each level reduces speed by 15%, creating accelerating difficulty
+  const speed = BASE_DROP_SPEED * Math.pow(0.85, level - 1);
+  return Math.max(speed, MIN_DROP_SPEED);
+}
 
 /**
  * Create an empty grid (20 rows x 10 columns)
@@ -149,6 +184,8 @@ function initializeGame() {
     currentPiece,
     nextPiece,
     score: 0,
+    level: 1,
+    linesCleared: 0,
     isGameOver: false,
     isPaused: false,
     isPlaying: false,
@@ -168,6 +205,8 @@ export const useGameStore = create<GameStore>((set, get) => {
     currentPiece: initialState.currentPiece,
     nextPiece: initialState.nextPiece,
     score: initialState.score,
+    level: initialState.level,
+    linesCleared: initialState.linesCleared,
     isGameOver: initialState.isGameOver,
     isPaused: initialState.isPaused,
     isPlaying: initialState.isPlaying,
@@ -256,6 +295,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         const scoreIncrease = calculateScore(linesCleared);
         const newScore = state.score + scoreIncrease;
 
+        // Update lines cleared and calculate new level
+        const newLinesCleared = state.linesCleared + linesCleared;
+        const newLevel = Math.floor(newLinesCleared / LINES_PER_LEVEL) + 1;
+
         // Use nextPiece as currentPiece, spawn new nextPiece
         const newCurrentPiece = state.nextPiece ? {
           ...state.nextPiece,
@@ -276,6 +319,8 @@ export const useGameStore = create<GameStore>((set, get) => {
           currentPiece: gameOver ? null : newCurrentPiece,
           nextPiece: gameOver ? null : newNextPiece,
           score: newScore,
+          level: newLevel,
+          linesCleared: newLinesCleared,
           isGameOver: gameOver,
         });
       }
@@ -298,8 +343,12 @@ export const useGameStore = create<GameStore>((set, get) => {
         const newGrid = placeTetrominoOnGrid(state.grid, state.currentPiece);
         const { newGrid: clearedGrid, linesCleared } = clearLines(newGrid);
 
-        const scoreIncrease = calculateScore(linesCleared);
+        const scoreIncrease = calculateScore(linesCleared) + dropDistance * 2; // Bonus for hard drop
         const newScore = state.score + scoreIncrease;
+
+        // Update lines cleared and calculate new level
+        const newLinesCleared = state.linesCleared + linesCleared;
+        const newLevel = Math.floor(newLinesCleared / LINES_PER_LEVEL) + 1;
 
         const newCurrentPiece = state.nextPiece ? {
           ...state.nextPiece,
@@ -318,6 +367,8 @@ export const useGameStore = create<GameStore>((set, get) => {
           currentPiece: gameOver ? null : newCurrentPiece,
           nextPiece: gameOver ? null : newNextPiece,
           score: newScore,
+          level: newLevel,
+          linesCleared: newLinesCleared,
           isGameOver: gameOver,
         });
       } else {
@@ -339,6 +390,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         const scoreIncrease = lineClearScore + hardDropBonus;
         const newScore = state.score + scoreIncrease;
 
+        // Update lines cleared and calculate new level
+        const newLinesCleared = state.linesCleared + linesCleared;
+        const newLevel = Math.floor(newLinesCleared / LINES_PER_LEVEL) + 1;
+
         const newCurrentPiece = state.nextPiece ? {
           ...state.nextPiece,
           position: {
@@ -356,6 +411,8 @@ export const useGameStore = create<GameStore>((set, get) => {
           currentPiece: gameOver ? null : newCurrentPiece,
           nextPiece: gameOver ? null : newNextPiece,
           score: newScore,
+          level: newLevel,
+          linesCleared: newLinesCleared,
           isGameOver: gameOver,
         });
       }
@@ -372,6 +429,11 @@ export const useGameStore = create<GameStore>((set, get) => {
     resetGame: () => {
       const newState = initializeGame();
       set(newState);
+    },
+
+    getDropSpeed: () => {
+      const state = get();
+      return calculateDropSpeed(state.level);
     },
 
     toggleHardMode: () => {

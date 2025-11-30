@@ -5,7 +5,7 @@ import { useGameStore } from '../store/gameStore';
  */
 export function ScoreBoard() {
   const score = useGameStore((state) => state.score);
-  const level = Math.floor(score / 1000) + 1; // Level increases every 1000 points
+  const level = useGameStore((state) => state.level);
 
   return (
     <div className="bg-gray-900 border-2 border-cyan-500 rounded-lg p-4 shadow-lg shadow-cyan-500/20">
