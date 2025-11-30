@@ -18,6 +18,8 @@ function App() {
   const hardDrop = useGameStore((state) => state.hardDrop);
   const isGameOver = useGameStore((state) => state.isGameOver);
   const isPlaying = useGameStore((state) => state.isPlaying);
+  const isHardMode = useGameStore((state) => state.isHardMode);
+  const toggleHardMode = useGameStore((state) => state.toggleHardMode);
 
   // Start the game loop
   useGameLoop();
@@ -81,6 +83,31 @@ function App() {
           {/* Right: Info Panel */}
           <div className="flex flex-col gap-4 w-full lg:w-auto">
             <NextPiece />
+
+            {/* Settings */}
+            <div className="bg-gray-900 border-2 border-orange-500 rounded-lg p-4 shadow-lg shadow-orange-500/20">
+              <h2 className="text-xl font-bold text-orange-400 mb-3 text-center">SETTINGS</h2>
+              <div className="space-y-3">
+                <label className="flex items-center justify-between cursor-pointer">
+                  <span className="text-sm text-gray-300">Hard Mode</span>
+                  <div className="relative inline-block w-12 h-6">
+                    <input
+                      type="checkbox"
+                      checked={isHardMode}
+                      onChange={toggleHardMode}
+                      className="sr-only peer"
+                    />
+                    <div className="w-12 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                  </div>
+                </label>
+                {isHardMode && (
+                  <p className="text-xs text-orange-300 mt-2">
+                    Grid lines hidden - higher difficulty
+                  </p>
+                )}
+              </div>
+            </div>
+
             <ScoreBoard />
 
             {/* Controls Info */}

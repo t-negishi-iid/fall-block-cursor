@@ -13,6 +13,7 @@ interface GameStore extends IGameState {
   isPlaying: boolean;
   level: number;
   linesCleared: number;
+  isHardMode: boolean;
   // Actions
   moveLeft: () => void;
   moveRight: () => void;
@@ -22,6 +23,7 @@ interface GameStore extends IGameState {
   startGame: () => void;
   resetGame: () => void;
   getDropSpeed: () => number;
+  toggleHardMode: () => void;
 }
 
 /**
@@ -187,6 +189,7 @@ function initializeGame() {
     isGameOver: false,
     isPaused: false,
     isPlaying: false,
+    isHardMode: false,
   };
 }
 
@@ -207,6 +210,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     isGameOver: initialState.isGameOver,
     isPaused: initialState.isPaused,
     isPlaying: initialState.isPlaying,
+    isHardMode: initialState.isHardMode,
 
     // Actions
     moveLeft: () => {
@@ -430,6 +434,10 @@ export const useGameStore = create<GameStore>((set, get) => {
     getDropSpeed: () => {
       const state = get();
       return calculateDropSpeed(state.level);
+    },
+
+    toggleHardMode: () => {
+      set((state) => ({ isHardMode: !state.isHardMode }));
     },
   };
 });
